@@ -31,17 +31,26 @@ def encode(request):
         if not image_url or not message:
             return JsonResponse({'error': 'Both image_url and message are required'}, status=400)
         
+        print(f"Received request - Image URL: {image_url}, Message length: {len(message)}")
+        
         # Encode the message in the image
-        encoded_image_path = encode_message(image_url, message)
+        try:
+            encoded_image_path = encode_message(image_url, message)
+            print(f"Image encoded successfully at: {encoded_image_path}")
+        except Exception as encode_error:
+            print(f"Error during encoding: {str(encode_error)}")
+            return JsonResponse({'error': f'Failed to encode message: {str(encode_error)}'}, status=500)
         
         # Upload to Cloudinary
         try:
+            print("Attempting to upload to Cloudinary...")
             upload_result = cloudinary.uploader.upload(
                 encoded_image_path,
                 folder="steganography",
                 resource_type="image"
             )
             cloudinary_url = upload_result['secure_url']
+            print(f"Successfully uploaded to Cloudinary: {cloudinary_url}")
             
             # Clean up the local file
             os.remove(encoded_image_path)
@@ -51,9 +60,11 @@ def encode(request):
                 'encoded_image_url': cloudinary_url
             })
         except Exception as upload_error:
+            print(f"Error during Cloudinary upload: {str(upload_error)}")
             return JsonResponse({'error': f'Failed to upload to Cloudinary: {str(upload_error)}'}, status=500)
         
     except Exception as e:
+        print(f"Unexpected error: {str(e)}")
         return JsonResponse({'error': str(e)}, status=500)
 
 @csrf_exempt

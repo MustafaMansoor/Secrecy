@@ -1,24 +1,44 @@
 // This is a service that will handle the encryption logic
 // It will be replaced with your actual backend API calls
 
+import { cloudinaryService } from './cloudinaryService';
+
 interface EncryptResult {
   encryptedImageUrl: string
 }
 
 class EncryptService {
+  private readonly backendUrl = 'http://127.0.0.1:8000/api'; // Update with your backend URL
+
   async encryptTextInImage(image: File, text: string): Promise<EncryptResult> {
-    // This is a placeholder for your backend API call
-    // Replace this with your actual API call to encrypt the text into the image
+    try {
+      // First upload the image to Cloudinary
+      const cloudinaryUrl = await cloudinaryService.uploadImage(image);
+      console.log('Image uploaded to Cloudinary:', cloudinaryUrl);
 
-    // Simulating API call with a timeout
-    await new Promise((resolve) => setTimeout(resolve, 1500))
+      // Send the Cloudinary URL and text to backend for encoding
+      const response = await fetch(`${this.backendUrl}/encode/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          image_url: cloudinaryUrl,
+          message: text,
+        }),
+      });
 
-    // For demo purposes, we're just using the original image
-    // In a real implementation, this would be the encrypted image returned from your backend
-    const encryptedImageUrl = URL.createObjectURL(image)
+      if (!response.ok) {
+        throw new Error('Failed to encode message in image');
+      }
 
-    return {
-      encryptedImageUrl,
+      const data = await response.json();
+      return {
+        encryptedImageUrl: data.encoded_image_url,
+      };
+    } catch (error) {
+      console.error('Error in encryption process:', error);
+      throw error;
     }
   }
 }

@@ -1,8 +1,6 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useRef } from "react"
+import { useState, useRef, type ChangeEvent } from "react"
 import { encryptService } from "@/services/encryptService"
 
 export function useEncryption() {
@@ -33,6 +31,13 @@ export function useEncryption() {
       setError("Please enter some text to encrypt")
       return
     }
+
+    console.log('Encode button clicked!', {
+      imageName: selectedImage.name,
+      imageSize: selectedImage.size,
+      textLength: text.length,
+      text: text
+    })
 
     setIsLoading(true)
     setError(null)

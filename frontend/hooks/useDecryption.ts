@@ -31,6 +31,11 @@ export function useDecryption() {
       return
     }
 
+    console.log('Decode button clicked!', {
+      imageName: selectedImage.name,
+      imageSize: selectedImage.size
+    })
+
     setIsLoading(true)
     setError(null)
 

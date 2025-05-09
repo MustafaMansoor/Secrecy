@@ -1,25 +1,43 @@
 // This is a service that will handle the decryption logic
 // It will be replaced with your actual backend API calls
 
+import { cloudinaryService } from './cloudinaryService';
+
 interface DecryptResult {
   decryptedText: string
 }
 
 class DecryptService {
+  private readonly backendUrl = 'http://127.0.0.1:8000/api'; // Update with your backend URL
+
   async decryptImageToText(image: File): Promise<DecryptResult> {
-    // This is a placeholder for your backend API call
-    // Replace this with your actual API call to decrypt the text from the image
+    try {
+      // First upload the image to Cloudinary
+      const cloudinaryUrl = await cloudinaryService.uploadImage(image);
+      console.log('Image uploaded to Cloudinary:', cloudinaryUrl);
 
-    // Simulating API call with a timeout
-    await new Promise((resolve) => setTimeout(resolve, 1500))
+      // Send the Cloudinary URL to backend for decoding
+      const response = await fetch(`${this.backendUrl}/decode/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          image_url: cloudinaryUrl,
+        }),
+      });
 
-    // For demo purposes, we're just setting a sample text
-    // In a real implementation, this would be the decrypted text returned from your backend
-    const decryptedText =
-      "This is a sample decrypted text. In a real implementation, this would be the hidden message extracted from the image using your backend steganography algorithm."
+      if (!response.ok) {
+        throw new Error('Failed to decode message from image');
+      }
 
-    return {
-      decryptedText,
+      const data = await response.json();
+      return {
+        decryptedText: data.message,
+      };
+    } catch (error) {
+      console.error('Error in decryption process:', error);
+      throw error;
     }
   }
 }
